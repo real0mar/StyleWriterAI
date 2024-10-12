@@ -12,14 +12,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.real0mar.stylewriterai.ui.theme.StyleWriterAITheme
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.layout.Arrangement
+import com.google.ai.edge.aicore.GenerativeModel
+import com.google.ai.edge.aicore.GenerationConfig
 
 class MainActivity : ComponentActivity() {
+    private lateinit var generativeModel: GenerativeModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize the generative model when the activity is created
+        generativeModel = createGenerativeModel()
+
         setContent {
             StyleWriterAITheme {
                 Column(
@@ -28,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // Text input at the top
                     var inputText by remember { mutableStateOf("") }
+                    var outputText by remember { mutableStateOf("Converted text will appear here") }
                     TextField(
                         value = inputText,
                         onValueChange = { inputText = it },
@@ -40,7 +52,7 @@ class MainActivity : ComponentActivity() {
                     // Swipeable section at the bottom
                     val styles = listOf("Hemingway", "Trump", "Shakespeare")
                     var selectedStyleIndex by remember { mutableStateOf(0) }
-                    val pagerState = rememberPagerState {styles.size}
+                    val pagerState = rememberPagerState { styles.size }
 
                     HorizontalPager(
                         state = pagerState,
@@ -57,10 +69,22 @@ class MainActivity : ComponentActivity() {
                         selectedStyleIndex = page
                     }
 
+                    // Display the converted text output
+                    Text(
+                        text = outputText,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center
+                    )
+
                     // Button to trigger style conversion
                     Button(
                         onClick = {
-                            // TODO: Call Gemini Nano model with inputText and styles[selectedStyleIndex]
+                            // Run the inference with the selected style
+                            runInference(inputText, styles[selectedStyleIndex]) { result ->
+                                outputText = result
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -72,20 +96,32 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    private fun createGenerativeModel(): GenerativeModel {
+        // Configure the generation parameters here
+        val generationConfig = GenerationConfig.Builder()
+            .setContext(applicationContext)
+            .setTemperature(0.7f) // Adjust temperature for randomness
+            .setTopK(16) // Adjust top-k value
+            .setMaxOutputTokens(256) // Limit the output length
+            .build()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    StyleWriterAITheme {
-        Greeting("Android")
+        return GenerativeModel(
+            generationConfig = generationConfig
+        )
+    }
+
+    private fun runInference(inputText: String, style: String, onResult: (String) -> Unit) {
+        // Create a coroutine scope for background work
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val prompt = "Please rewrite the following text in the style of $style: $inputText"
+                val response = generativeModel.generateContent(prompt)
+                onResult(response.text)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult("Error: ${e.message}")
+            }
+        }
     }
 }
