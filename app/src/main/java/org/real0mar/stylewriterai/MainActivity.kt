@@ -24,12 +24,16 @@ import kotlinx.coroutines.flow.onCompletion
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.OutlinedTextFieldDefaults
+
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var generativeModel: GenerativeModel
@@ -52,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 var selectedStyleIndex by remember { mutableStateOf(0) }
                 val coroutineScope = rememberCoroutineScope()
 
-                val styles = listOf("Hemingway", "Trump", "Shakespeare")
+                val styles = listOf("Hemingway", "Donald Trump", "Shakespeare")
                 val styleIcons = listOf(
                     Icons.Default.Book,
                     Icons.Default.Edit,
@@ -75,16 +79,28 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 24.dp)
                     )
 
-                    // Text Input Field
+                    @OptIn(markerClass = [androidx.compose.material3.ExperimentalMaterial3Api::class])
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
-                        label = { Text("Enter your text here") },
-                        placeholder = { Text("Type something...") },
+                        label = { Text("Enter your text here", color = Color.Black) }, // Label color
+                        placeholder = { Text("Type something...", color = Color.DarkGray) }, // Placeholder color
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black, // Text color when focused
+                            unfocusedTextColor = Color.Black, // Text color when not focused
+                            focusedBorderColor = Color.Black, // Border color when focused
+                            unfocusedBorderColor = Color.Gray, // Border color when not focused
+                            cursorColor = Color.Black, // Cursor color
+                            focusedLabelColor = Color.Black, // Label color when focused
+                            unfocusedLabelColor = Color.DarkGray // Label color when not focused
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
+                            .heightIn(min = 56.dp, max = 200.dp)
                     )
+
+
 
                     // Style Selection Tabs
                     TabRow(
