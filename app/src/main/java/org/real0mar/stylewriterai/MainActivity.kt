@@ -20,6 +20,10 @@ import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.layout.Arrangement
 import com.google.ai.edge.aicore.GenerativeModel
 import com.google.ai.edge.aicore.GenerationConfig
+import com.google.ai.edge.aicore.generationConfig
+import com.google.ai.edge.aicore.GenerativeAIException
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
 
 class MainActivity : ComponentActivity() {
     private lateinit var generativeModel: GenerativeModel
@@ -28,18 +32,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Initialize the generative model when the activity is created
-        generativeModel = createGenerativeModel()
+        // Initialize the generative model
+        initGenerativeModel()
 
         setContent {
             StyleWriterAITheme {
+                var inputText by remember { mutableStateOf("") }
+                var outputText by remember { mutableStateOf("Converted text will appear here") }
+
+                val styles = listOf("Hemingway", "Trump", "Shakespeare")
+                var selectedStyleIndex by remember { mutableStateOf(0) }
+                val pagerState = rememberPagerState { styles.size }
+
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // Text input at the top
-                    var inputText by remember { mutableStateOf("") }
-                    var outputText by remember { mutableStateOf("Converted text will appear here") }
                     TextField(
                         value = inputText,
                         onValueChange = { inputText = it },
@@ -49,11 +58,7 @@ class MainActivity : ComponentActivity() {
                             .padding(16.dp)
                     )
 
-                    // Swipeable section at the bottom
-                    val styles = listOf("Hemingway", "Trump", "Shakespeare")
-                    var selectedStyleIndex by remember { mutableStateOf(0) }
-                    val pagerState = rememberPagerState { styles.size }
-
+                    // Swipeable section at the bottom for selecting style
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier
@@ -66,7 +71,7 @@ class MainActivity : ComponentActivity() {
                             style = MaterialTheme.typography.headlineMedium,
                             textAlign = TextAlign.Center
                         )
-                        selectedStyleIndex = page
+                        selectedStyleIndex = page  // Update the selected style index based on swipe
                     }
 
                     // Display the converted text output
@@ -81,8 +86,8 @@ class MainActivity : ComponentActivity() {
                     // Button to trigger style conversion
                     Button(
                         onClick = {
-                            // Run the inference with the selected style
-                            runInference(inputText, styles[selectedStyleIndex]) { result ->
+                            // Pass the selected style into the prompt correctly
+                            runStreamingInference(inputText, styles[selectedStyleIndex]) { result ->
                                 outputText = result
                             }
                         },
@@ -97,28 +102,39 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun createGenerativeModel(): GenerativeModel {
-        // Configure the generation parameters here
-        val generationConfig = GenerationConfig.Builder()
-            .setContext(applicationContext)
-            .setTemperature(0.7f) // Adjust temperature for randomness
-            .setTopK(16) // Adjust top-k value
-            .setMaxOutputTokens(256) // Limit the output length
-            .build()
+    private fun initGenerativeModel() {
+        // Configure the generation parameters using the example structure
+        val generationConfig = generationConfig {
+            context = applicationContext
+            temperature = 0.7f // Adjust temperature for randomness
+            topK = 16 // Adjust top-k value
+            maxOutputTokens = 256 // Limit the output length
+        }
 
-        return GenerativeModel(
-            generationConfig = generationConfig
-        )
+        generativeModel = GenerativeModel(generationConfig)
     }
 
-    private fun runInference(inputText: String, style: String, onResult: (String) -> Unit) {
+    private fun runStreamingInference(inputText: String, style: String, onResult: (String) -> Unit) {
         // Create a coroutine scope for background work
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val prompt = "Please rewrite the following text in the style of $style: $inputText"
-                val response = generativeModel.generateContent(prompt)
-                onResult(response.text)
-            } catch (e: Exception) {
+                var result = ""
+                var hasFirstStreamingResult = false
+
+                generativeModel.generateContentStream(prompt)
+                    .onCompletion { /* Handle end of streaming if needed */ }
+                    .collect { response ->
+                        result += response.text
+                        // Update the UI with the streaming result
+                        if (hasFirstStreamingResult) {
+                            onResult(result)
+                        } else {
+                            hasFirstStreamingResult = true
+                            onResult(result)
+                        }
+                    }
+            } catch (e: GenerativeAIException) {
                 e.printStackTrace()
                 onResult("Error: ${e.message}")
             }
