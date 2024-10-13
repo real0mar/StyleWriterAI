@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,6 +19,9 @@ import kotlinx.coroutines.launch
 import org.real0mar.stylewriterai.ui.theme.StyleWriterAITheme
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import com.google.ai.edge.aicore.GenerativeModel
 import com.google.ai.edge.aicore.GenerationConfig
 import com.google.ai.edge.aicore.generationConfig
@@ -45,7 +49,9 @@ class MainActivity : ComponentActivity() {
                 val pagerState = rememberPagerState { styles.size }
 
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // Text input at the top
@@ -55,15 +61,15 @@ class MainActivity : ComponentActivity() {
                         label = { Text("Enter your text here") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(bottom = 16.dp)
                     )
 
                     // Swipeable section at the bottom for selecting style
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier
-                            .fillMaxHeight(0.4f)
-                            .padding(16.dp)
+                            .fillMaxHeight(0.2f)
+                            .padding(bottom = 16.dp)
                     ) { page ->
                         Text(
                             text = styles[page],
@@ -74,14 +80,21 @@ class MainActivity : ComponentActivity() {
                         selectedStyleIndex = page  // Update the selected style index based on swipe
                     }
 
-                    // Display the converted text output
-                    Text(
-                        text = outputText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
+                    // Scrollable text output to handle long text
+                    SelectionContainer {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)  // Let the text take up available space but scroll if it's too much
+                                .verticalScroll(rememberScrollState())
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = outputText,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
 
                     // Button to trigger style conversion
                     Button(
@@ -93,7 +106,7 @@ class MainActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(top = 16.dp)
                     ) {
                         Text("Convert Text")
                     }
