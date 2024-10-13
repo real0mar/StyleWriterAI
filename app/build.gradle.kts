@@ -58,6 +58,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.google.ai.edge.aicore:aicore:0.0.1-exp01")
     implementation("androidx.compose.foundation:foundation:1.5.0") // Ensure compatibility with pager
-
+    implementation("androidx.compose.material:material-icons-extended")
 
 }
