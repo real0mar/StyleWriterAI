@@ -42,8 +42,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Set status bar color to dark
-        window.statusBarColor = Color(0xFF000000).toArgb()
+        window.statusBarColor = Color(0xFFAAAAAA).toArgb()
 
         // Initialize the generative model
         initGenerativeModel()
@@ -56,11 +55,11 @@ class MainActivity : ComponentActivity() {
                 var selectedStyleIndex by remember { mutableStateOf(0) }
                 val coroutineScope = rememberCoroutineScope()
 
-                val styles = listOf("Hemingway", "Donald Trump", "Shakespeare")
+                val styles = listOf("Hemingway", "Jane Austen", "Shakespeare")
                 val styleIcons = listOf(
-                    Icons.Default.Book,
                     Icons.Default.Edit,
-                    Icons.Default.Create
+                    Icons.Default.Edit,
+                    Icons.Default.Edit
                 )
 
                 Column(
@@ -79,7 +78,7 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 24.dp)
                     )
 
-                    @OptIn(markerClass = [androidx.compose.material3.ExperimentalMaterial3Api::class])
+                    @OptIn(markerClass = [ExperimentalMaterial3Api::class])
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
@@ -99,10 +98,6 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 16.dp)
                             .heightIn(min = 56.dp, max = 200.dp)
                     )
-
-
-
-                    // Style Selection Tabs
                     TabRow(
                         selectedTabIndex = selectedStyleIndex,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -209,14 +204,15 @@ class MainActivity : ComponentActivity() {
 
     private suspend fun runInference(inputText: String, style: String, onResult: (String) -> Unit) {
         try {
-            val prompt = "Please rewrite the following text in the style of $style: $inputText"
+            val prompt = "Rewrite the following text in the style of $style: $inputText"
             var result = ""
 
             generativeModel.generateContentStream(prompt)
                 .onCompletion { /* Handle completion */ }
                 .collect { response ->
                     result += response.text
-                    onResult(result)
+                    onResult(result.trim())
+
                 }
         } catch (e: GenerativeAIException) {
             e.printStackTrace()
