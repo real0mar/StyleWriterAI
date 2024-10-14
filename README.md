@@ -15,7 +15,7 @@ Style Writer AI is an Android app that uses Gemini Nano running inference ON DEV
 
 ## Installation
 
-**warning!:** This app requires AICore beta with the Gemini Nano API, currently supported on on Pixel 9 series devices, Google Pixel 8 Series devices, Samsung S24 Series devices, Samsung Z Fold6, Samsung Z Flip6, Realme GT 6, Motorola Edge 50 Ultra, Motorola Razr 50 Ultra, Xiaomi 14T/Pro, and Xiaomi MIX Flip.
+**warning!:** This app requires AICore beta with the Gemini Nano API, currently supported on Android devices with Tensor G3+ or Snapdragon 8 Gen3+ with at least 8GB RAM.
 
 1. Clone the repository:
    ```bash
