@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,18 +21,14 @@ import com.google.ai.edge.aicore.generationConfig
 import com.google.ai.edge.aicore.GenerativeAIException
 import kotlinx.coroutines.flow.onCompletion
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.OutlinedTextFieldDefaults
-
-
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 class MainActivity : ComponentActivity() {
     private lateinit var generativeModel: GenerativeModel
@@ -57,9 +52,9 @@ class MainActivity : ComponentActivity() {
 
                 val styles = listOf("Hemingway", "Jane Austen", "Shakespeare")
                 val styleIcons = listOf(
-                    Icons.Default.Edit,
-                    Icons.Default.Edit,
-                    Icons.Default.Edit
+                    Icons.Default.Edit,      // Hemingway - direct, simple
+                    Icons.Default.Create,    // Jane Austen - refined, elegant
+                    Icons.Default.MenuBook   // Shakespeare - dramatic, literary
                 )
 
                 Column(
@@ -68,17 +63,16 @@ class MainActivity : ComponentActivity() {
                         .padding(WindowInsets.systemBars.asPaddingValues()) // Add padding for system bars
                         .padding(16.dp)
                 ) {
-                    // App Title
+                    // App Title - M3 Expressive emphasized typography
                     Text(
                         text = "Style Writer AI",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(bottom = 24.dp)
                     )
 
-                    @OptIn(markerClass = [ExperimentalMaterial3Api::class])
+                    @OptIn(ExperimentalMaterial3Api::class)
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
@@ -93,6 +87,7 @@ class MainActivity : ComponentActivity() {
                             focusedLabelColor = Color.Black, // Label color when focused
                             unfocusedLabelColor = Color.DarkGray // Label color when not focused
                         ),
+                        shape = RoundedCornerShape(12.dp), // M3 Expressive shape
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
@@ -117,7 +112,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // Convert Button
+                    // Convert Button - M3 Expressive prominent shape
                     Button(
                         onClick = {
                             isLoading = true
@@ -132,7 +127,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        enabled = inputText.isNotBlank() && !isLoading
+                        enabled = inputText.isNotBlank() && !isLoading,
+                        shape = RoundedCornerShape(24.dp) // M3 Expressive large rounded corners
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -147,17 +143,18 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // Output Text Area
+                    // Output Text Area - M3 Expressive emphasized label
                     Text(
                         text = "Converted Text:",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     Card(
                         modifier = Modifier
                             .fillMaxSize()
-                            .weight(1f)
+                            .weight(1f),
+                        shape = RoundedCornerShape(20.dp) // M3 Expressive shape variety
                     ) {
                         SelectionContainer {
                             Box(
@@ -208,7 +205,6 @@ class MainActivity : ComponentActivity() {
             var result = ""
 
             generativeModel.generateContentStream(prompt)
-                .onCompletion { /* Handle completion */ }
                 .collect { response ->
                     result += response.text
                     onResult(result.trim())
